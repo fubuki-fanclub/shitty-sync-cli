@@ -2,7 +2,7 @@ const childProc = require("child_process")
 const { magentaBright } = require("chalk");
 
 const {ffprobe} = require('./ffmpeg-util')
-const findTrack = require('./find-track')
+const findStream = require('./find-stream')
 
 async function main(args) {
     // get file info
@@ -12,13 +12,13 @@ async function main(args) {
     console.log(magentaBright("Streams in source file:"));
     console.table(data.streams.map(stream => ({ type: stream.codec_type, codec: stream.codec_long_name, lang: stream.tags?.language ?? null, title: stream.tags?.title ?? stream.tags?.filename })))
 
-    const videoTrack = findTrack.video(data),
-        audioTrack = findTrack.audio(data, 'jpn'),
-        subTrack = await findTrack.sub(data, 'eng');
+    const videoStream = findStream.video(data),
+        audioStream = findStream.audio(data, 'jpn'),
+        subStream = await findStream.sub(data, 'eng');
 
 
     console.log(magentaBright("Output streams:"));
-    console.table({ videoTrack, audioTrack, subTrack }, ['index', 'tags']);
+    console.table({ videoStream, audioStream, subStream }, ['index', 'tags']);
 }
 
 main(process.argv.slice(2));
