@@ -1,7 +1,6 @@
-const childProc = require("child_process")
 const { magentaBright } = require("chalk");
 
-const {ffprobe} = require('./ffmpeg-util')
+const { ffprobe, ffmpegEncode } = require('./ffmpeg-util')
 const findStream = require('./find-stream')
 
 async function main(args) {
@@ -12,13 +11,24 @@ async function main(args) {
     console.log(magentaBright("Streams in source file:"));
     console.table(data.streams.map(stream => ({ type: stream.codec_type, codec: stream.codec_long_name, lang: stream.tags?.language ?? null, title: stream.tags?.title ?? stream.tags?.filename })))
 
-    const videoStream = findStream.video(data),
-        audioStream = findStream.audio(data, 'jpn'),
-        subStream = await findStream.sub(data, 'eng');
+    const streams = {
+        video: findStream.video(data),
+        audio: findStream.audio(data, 'jpn'),
+        subtitles: await findStream.sub(data, 'eng')
+    }
 
+    if (streams.subtitles) {            //subtitle filter counts streams differently
+        streams.subtitles.subIndex = 0;  
+        for (let i = 0; i < streams.subtitles.index; i++) {
+            if (data.streams[i].codec_type === 'subtitle')
+                streams.subtitles.subIndex++;
+        }
+    }
 
     console.log(magentaBright("Output streams:"));
-    console.table({ videoStream, audioStream, subStream }, ['index', 'tags']);
+    console.table(streams, ['index', 'tags']);
+
+    ffmpegEncode(args[0], streams, 'out.mp4');
 }
 
 main(process.argv.slice(2));

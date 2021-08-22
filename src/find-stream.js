@@ -68,6 +68,7 @@ async function findSubStream(data, lang) {
     ));
     const longest = subStreamsWithLengths.reduce((prev,cur)=>cur.len > prev.len ? cur : prev,{len:0});
     console.info(cyanBright(`[SUBS] selected stream ${longest.stream.index}`));
+
     return longest.stream;
 }
 
